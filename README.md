@@ -42,7 +42,73 @@ export AGENTLAIR_ADDRESS="your-agent@agentlair.dev"
 
 ## Usage
 
-The plugin auto-registers with Hermes Agent. On startup, any unread AgentLair messages are injected into the conversation context. The `send_agentlair_message` tool is available for the agent to send messages.
+The plugin auto-registers with Hermes Agent via entry point discovery. No manual wiring needed.
+
+On startup, unread AgentLair messages are injected into the conversation context. The `send_agentlair_message` tool is available for the agent to send messages during the session.
+
+## API surface
+
+### Plugin hooks (registered automatically)
+
+```python
+# on_session_start — Drains inbox (peek phase)
+# Returns {"context": "..."} with formatted messages, or None if empty.
+# Messages stay UNREAD until session ends normally.
+result = await on_session_start(session_id="...")
+
+# on_session_end — Acks messages + flushes outbox (ack phase)
+# If agent crashes, messages stay unread → re-fetched next startup.
+await on_session_end(session_id="...")
+```
+
+### Tool: `send_agentlair_message`
+
+Available to the LLM during the session. Parameters:
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `to` | string | ✓ | Recipient address |
+| `subject` | string | ✓ | Subject line |
+| `text` | string | ✓ | Plain text body |
+| `in_reply_to` | string | | Message ID for threading |
+| `queue` | boolean | | Queue for session-end flush (default: false) |
+
+### Delegate fallback: `agentlair_mail_drop`
+
+```python
+# Called by Hermes when direct delegation fails.
+# Drops message into target agent's AgentLair inbox with [delegate] prefix.
+result = delegate_fallback(
+    to="target-agent@agentlair.dev",
+    subject="Handle this task",
+    text="Please process the widget order",
+)
+# → {"status": "dropped", "method": "agentlair_mail_drop", "id": "..."}
+```
+
+### Client (for direct use)
+
+```python
+from hermes_agentlair import AgentLairClient
+
+client = AgentLairClient(api_key="al_live_...", address="agent@agentlair.dev")
+
+# Peek inbox (no side effects — messages stay unread)
+messages = client.peek_inbox(limit=20)
+
+# Read full message body
+full = client.read_message(messages[0])
+print(full.body)
+
+# Ack after processing (marks as read)
+client.ack(full)
+
+# Send
+client.send_message(to="bob@agentlair.dev", subject="Hello", text="Hi from Hermes")
+
+# Convenience: peek + fetch all bodies in one call
+all_messages = client.drain_inbox()
+```
 
 ## Development
 
