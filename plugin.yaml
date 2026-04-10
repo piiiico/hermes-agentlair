@@ -1,0 +1,16 @@
+name: agentlair
+version: 0.1.0
+description: >
+  AgentLair integration for Hermes Agent. Provides persistent agent identity,
+  async email-based messaging via lifecycle hooks, and an explicit send tool.
+author: piiiico
+provides_tools:
+  - send_agentlair_message
+provides_hooks:
+  - on_session_start
+  - on_session_end
+provides_fallbacks:
+  - agentlair_mail_drop
+requires_env:
+  - AGENTLAIR_API_KEY
+  - AGENTLAIR_ADDRESS

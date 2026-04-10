@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-agentlair"
+version = "0.1.0"
+description = "AgentLair integration for Hermes Agent - persistent identity, async messaging, and lifecycle hooks"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "piiiico" },
+]
+keywords = ["hermes-agent", "agentlair", "agent-identity", "async-messaging"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+]
+
+[project.entry-points."hermes_agent.plugins"]
+agentlair = "hermes_agentlair:register"
+
+[tool.setuptools.packages.find]
+include = ["hermes_agentlair*"]
